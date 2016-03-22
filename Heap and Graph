@@ -330,7 +330,10 @@ void stampGraph (int **G, int V) {
     int i, j;
     for (i = 0; i<V; i++) {
         for (j = 0; j<V; j++) {
-            printf("[%d][%d]:%d  ", i, j, G[i][j]);
+            if (G[i][j] == 1)
+                printf("[%d][%d]:%d  ", i, j, G[i][j]);
+            else
+                printf("[%d][%d]:   ", i, j);
         }
         printf("\n");
     }
