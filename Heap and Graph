@@ -1,10 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct heap {
+typedef struct {
     int dim;
     int *a;
 }heap;
+
+typedef struct elemento {
+    int nodo;
+    struct elemento *next;
+}elemento;
+
+typedef elemento *link;
 
 void inizializzaArray (int *a) {
     a[0] = 0;
@@ -357,6 +364,9 @@ void buildGraph (int **G, int V) {
         if (i>=V || j>=V) {
             printf("Hai sbagliato!\nMi hai chiesto di creare un arco tra due nodi che non esistono!\n");
         }
+        else if (i == j) {
+            printf("Hai sbagliato!\nMi hai chiesto di creare un arco in un solo nodo!\n");
+        }
         else if (G[i][j] == 1 || G[j][i] == 1) {
             printf("Hai sbagliato!\nMi hai chiesto di creare un arco tra due nodi che sono già legati!\n");
         }
@@ -376,6 +386,97 @@ void buildGraph (int **G, int V) {
     printf("Matrice d'adiacenza creata con successo!!\n");
 }
 
+void buildGraphList (link *A, int V) {
+    int i, j, iCont = 0, jCont = 0;
+    _Bool building = 0, iFound = 0, jFound = 0;
+    char scelta = 'n';
+    
+    printf("Vuoi inserire un arco ? (y/n)");
+    scanf(" %c", &scelta);
+    printf("\n");
+    if (scelta == 'y')
+        building = 1;
+    
+    while (building && iCont != (V*(V-1))/2) {
+        printf("Dimmi gli indici dei nodi tra cui inserire un arco: [][]");
+        scanf("%d %d", &i, &j);
+        printf("\n");
+        if (i>=V || j>=V) {
+            printf("Hai sbagliato!\nMi hai chiesto di creare un arco tra due nodi che non esistono!\n");
+        }
+        else if (i == j) {
+            printf("Hai sbagliato!\nMi hai chiesto di creare un arco in un solo nodo!\n");
+        }
+        else {
+            if (A[i] == NULL) {
+                A[i] = calloc(1, sizeof(elemento));
+                A[i]->nodo = j;
+                A[i]->next = NULL;
+                iCont++;
+            }
+            else {
+                link temp = A[i];
+                if (iCont == 1) {
+                    if (temp->nodo == j)
+                        iFound = 1;
+                }
+                while (temp->next != NULL && iFound == 0) {
+                    if (temp->nodo == j) {
+                        iFound = 1;
+                    }
+                    else {
+                        temp = temp->next;
+                    }
+                }
+                if (iFound == 0) {
+                    temp->next = calloc(1, sizeof(elemento));
+                    temp->next->nodo = j;
+                    temp->next->next = NULL;
+                    iCont++;
+                }
+            }
+//          ORA FACCIO SPECULARE PER LA j
+            if (A[j] == NULL) {
+                A[j] = calloc(1, sizeof(elemento));
+                A[j]->nodo = i;
+                A[j]->next = NULL;
+                jCont++;
+            }
+            else {
+                link temp = A[j];
+                if (jCont == 1) {
+                    if (temp->nodo == i)
+                        jFound = 1;
+                }
+                while (temp->next != NULL && jFound == 0) {
+                    if (temp->nodo == i) {
+                        jFound = 1;
+                    }
+                    else {
+                        temp = temp->next;
+                    }
+                }
+                if (jFound == 0) {
+                    temp->next = calloc(1, sizeof(elemento));
+                    temp->next->nodo = i;
+                    temp->next->next = NULL;
+                    jCont++;
+                }
+            }
+            if (iFound)
+                printf("Hai sbagliato!\nMi hai chiesto di creare un arco tra due nodi che sono già legati!\n");
+            iFound = 0, jFound = 0;
+        }
+        printf("Vuoi inserire un altro arco ? (y/n)");
+        scanf(" %c", &scelta);
+        printf("\n");
+        if (scelta == 'n') {
+            building = 0;
+        }
+    }
+    printf("Lista d'adiacenza creata con successo!!\n");
+}
+
 int detectMaxRankGraph (int **G, int V) {
     int i, j, sum = 0, ans = -1, *aux = calloc(V, sizeof(int));
     
@@ -389,6 +490,23 @@ int detectMaxRankGraph (int **G, int V) {
             ans = i;
         }
     
+    return ans;
+}
+
+int detectMaxRankGraphList (link *A, int V) {
+    int i, sum = 0, ans, *aux = calloc(V, sizeof(int));
+    for (i = 0; i<V; i++) {
+        link temp = A[i];
+        while (temp != NULL) {
+            aux[i]++;
+            temp = temp->next;
+        }
+    }
+    for (i = 0; i<10; i++)
+        if (sum <= aux[i]) {
+            sum = aux[i];
+            ans = i;
+        }
     return ans;
 }
 
@@ -410,7 +528,21 @@ void countIsolatedNodes (int **G, int V) {
         printf("Il grafo che mi hai passato non ha nodi isolati!!\n");
 }
 
-_Bool controlIfRegularGraph (int **G, int V) {
+void countIsolatedNodesList (link *A, int V) {
+    int i, cont = 0;
+    for (i = 0; i<V; i++) {
+        if (A[i] == NULL) {
+            printf("Il nodo %d è isolato!\n", i);
+            cont++;
+        }
+    }
+    if (cont != 0)
+        printf("In totale i nodi isolati del grafo che mi hai passato sono %d\n", cont);
+    else
+        printf("Il grafo che mi hai passato non ha nodi isolati!!\n");
+}
+
+void controlIfRegularGraph (int **G, int V) {
     int i, j, *aux = (int *) calloc (V, sizeof(int));
     _Bool regular = 1;
     
@@ -423,11 +555,30 @@ _Bool controlIfRegularGraph (int **G, int V) {
             regular = 0;
     
     if (regular)
-        printf("Il grafo che mi hai passato è connesso!!\n");
+        printf("Il grafo che mi hai passato è regolare!!\n");
     else
-        printf("Il grafo che mi hai passato non è connesso!!\n");
+        printf("Il grafo che mi hai passato non è regolare!!\n");
+}
+
+void controlIfRegularGraphList (link *A, int V) {
+    int i, sum = 0, ans, *aux = calloc(V, sizeof(int));
+    _Bool regular = 1;
+    for (i = 0; i<V; i++) {
+        link temp = A[i];
+        while (temp != NULL) {
+            aux[i]++;
+            temp = temp->next;
+        }
+    }
     
-    return regular;
+    for (i = 0; i<V-1 && regular; i++)
+        if (aux[i] != aux[i+1])
+            regular = 0;
+    
+    if (regular)
+        printf("Il grafo che mi hai passato è regolare!!\n");
+    else
+        printf("Il grafo che mi hai passato non è regolare!!\n");
 }
 
 int main(int argc, char** argv) {
@@ -495,7 +646,17 @@ int main(int argc, char** argv) {
     
     countIsolatedNodes(G, V);
     
-    int test = controlIfRegularGraph(G, V);
+    controlIfRegularGraph(G, V);
+    
+    link *A = calloc (V, sizeof(link));
+    
+    buildGraphList(A, V);
+    
+    printf("%d\n", detectMaxRankGraphList(A, V));
+    
+    countIsolatedNodesList(A, V);
+    
+    controlIfRegularGraphList(A, V);
     
     return (EXIT_SUCCESS);
 }
