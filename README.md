@@ -1,1 +1,1 @@
-# C_ALGORITHM
+# Some C algorithms done in class.
